@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/OnsBENSALAH/Timesheet-DevOps.git'
+                git 'https://github.com/youssef060902/Timesheet-DevOps.git'
             }
         }
 
