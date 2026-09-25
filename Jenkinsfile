@@ -1,3 +1,4 @@
+```groovy
 pipeline {
     agent any
 
@@ -23,19 +24,40 @@ pipeline {
 
         stage('Push Docker Image') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-credentials',
-                    usernameVariable: 'DOCKER_USERNAME',
-                    passwordVariable: 'DOCKER_PASSWORD'
-                )]) {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-credentials',
+                        usernameVariable: 'DOCKER_USERNAME',
+                        passwordVariable: 'DOCKER_PASSWORD'
+                    )
+                ]) {
                     sh '''
-                        echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-                        docker tag timesheet-devops-backend:latest $DOCKER_USERNAME/timesheet-devops-backend:latest
-                        docker push $DOCKER_USERNAME/timesheet-devops-backend:latest
+                        echo "$DOCKER_PASSWORD" | docker login \
+                            -u "$DOCKER_USERNAME" \
+                            --password-stdin
+
+                        docker tag \
+                            timesheet-devops-backend:latest \
+                            $DOCKER_USERNAME/timesheet-devops-backend:latest
+
+                        docker push \
+                            $DOCKER_USERNAME/timesheet-devops-backend:latest
+
                         docker logout
                     '''
                 }
             }
         }
+
+        stage('Deploy') {
+            steps {
+                sh '''
+                    docker compose pull
+                    docker compose up -d
+                '''
+            }
+        }
     }
 }
+```
+
