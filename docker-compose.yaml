@@ -17,7 +17,7 @@ services:
       retries: 10
 
   backend:
-    build: .
+    build: youssefazzouz692002/timesheet-devops-backend:latest
     container_name: timesheet-backend
     depends_on:
       mysql-db:
