@@ -1,3 +1,4 @@
+```groovy
 pipeline {
     agent any
 
@@ -9,9 +10,22 @@ pipeline {
             }
         }
 
-        stage('Compile') {
+        stage('Test + JaCoCo') {
             steps {
-                sh 'mvn clean package -DskipTests'
+                sh 'mvn clean test'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    sh '''
+                        mvn sonar:sonar \
+                        -Dsonar.projectKey=timesheet-devops \
+                        -Dsonar.projectName=Timesheet-DevOps \
+                        -Dsonar.host.url=http://localhost:9000
+                    '''
+                }
             }
         }
 
@@ -23,24 +37,19 @@ pipeline {
 
         stage('Push Docker Image') {
             steps {
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: 'dockerhub-credentials',
-                        usernameVariable: 'DOCKER_USERNAME',
-                        passwordVariable: 'DOCKER_PASSWORD'
-                    )
-                ]) {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-credentials',
+                    usernameVariable: 'DOCKER_USERNAME',
+                    passwordVariable: 'DOCKER_PASSWORD'
+                )]) {
                     sh '''
-                        echo "$DOCKER_PASSWORD" | docker login \
-                            -u "$DOCKER_USERNAME" \
-                            --password-stdin
+                        echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
-                        docker tag \
-                            timesheet-devops-backend:latest \
-                            $DOCKER_USERNAME/timesheet-devops-backend:latest
+                        docker tag timesheet-devops-backend:latest \
+                        $DOCKER_USERNAME/timesheet-devops-backend:latest
 
                         docker push \
-                            $DOCKER_USERNAME/timesheet-devops-backend:latest
+                        $DOCKER_USERNAME/timesheet-devops-backend:latest
 
                         docker logout
                     '''
@@ -58,3 +67,5 @@ pipeline {
         }
     }
 }
+```
+
